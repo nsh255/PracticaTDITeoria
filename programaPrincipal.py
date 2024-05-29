@@ -39,7 +39,7 @@ while cap.isOpened():
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Detectar jugadores en el fotograma utilizando el clasificador Haar Cascade
-    players = player_cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=7, minSize=(40, 40))
+    players = player_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=8, minSize=(50, 50))
 
     # Dibujar un rectángulo alrededor de cada jugador detectado
     for (x, y, w, h) in players:
