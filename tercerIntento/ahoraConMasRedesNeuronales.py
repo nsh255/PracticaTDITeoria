@@ -56,7 +56,14 @@ while cap.isOpened():
 
             # Asignar un color al jugador si no está asignado
             if tuple(box) not in player_colors:
-                player_colors[tuple(box)] = tuple(random.randint(0, 255) for _ in range(3))
+                # Obtener la posición x del centro de la caja delimitadora
+                center_x = (box[0] + box[2]) / 2
+
+                # Asignar un color basado en la posición x
+                if center_x <= width / 2:
+                    player_colors[tuple(box)] = (255, 0, 0)  # Rojo
+                else:
+                    player_colors[tuple(box)] = (0, 255, 0)  # Verde
 
             # Dibujar el rectángulo con el color asignado
             draw.rectangle(tuple(box), outline=player_colors[tuple(box)], width=2)
@@ -71,7 +78,8 @@ while cap.isOpened():
             text_width = text_bbox[2] - text_bbox[0]
             text_height = text_bbox[3] - text_bbox[1]
             text_position = (box[0], box[1] - text_height - 5)
-            draw.rectangle([text_position, (text_position[0] + text_width, text_position[1] + text_height)], fill=player_colors[tuple(box)])
+            draw.rectangle([text_position, (text_position[0] + text_width, text_position[1] + text_height)],
+                           fill=player_colors[tuple(box)])
             draw.text(text_position, text, fill="white", font=font)
 
     # Guardar el frame con las detecciones en el video de salida
