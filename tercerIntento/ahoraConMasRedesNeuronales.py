@@ -1,11 +1,12 @@
 import cv2
 from transformers import YolosImageProcessor, YolosForObjectDetection
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import torch
 import numpy as np
+import random
 
 # Ruta del video en tu equipo
-video_path = "/path/to/video.mp4"
+video_path = "/content/pruebas.mp4"
 
 # Cargar el modelo y el procesador de imágenes
 model = YolosForObjectDetection.from_pretrained('hustvl/yolos-tiny')
@@ -19,9 +20,15 @@ width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 # Crear el objeto VideoWriter para guardar el video con las detecciones
-output_path = "/path/to/output_video.mp4"
+output_path = "/content/salida.mp4"
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 out = cv2.VideoWriter(output_path, fourcc, 30.0, (width, height))
+
+# Fuente para el texto
+font = ImageFont.truetype("/content/Arial.ttf", 14)
+
+# Diccionario para almacenar los colores de los jugadores
+player_colors = {}
 
 while cap.isOpened():
     # Leer el siguiente frame del video
@@ -46,7 +53,26 @@ while cap.isOpened():
     for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
         if model.config.id2label[label.item()] == "person":
             box = [round(i, 2) for i in box.tolist()]
-            draw.rectangle(tuple(box), outline="red", width=2)
+
+            # Asignar un color al jugador si no está asignado
+            if tuple(box) not in player_colors:
+                player_colors[tuple(box)] = tuple(random.randint(0, 255) for _ in range(3))
+
+            # Dibujar el rectángulo con el color asignado
+            draw.rectangle(tuple(box), outline=player_colors[tuple(box)], width=2)
+
+            # Obtener el valor de confianza
+            confidence = round(score.item(), 2)
+
+            # Agregar el texto "persona" y el valor de confianza sobre el cuadro delimitador
+            text = f"Persona: {confidence}"
+            # Obtener el tamaño del texto
+            text_bbox = draw.textbbox((box[0], box[1] - 15), text, font=font)
+            text_width = text_bbox[2] - text_bbox[0]
+            text_height = text_bbox[3] - text_bbox[1]
+            text_position = (box[0], box[1] - text_height - 5)
+            draw.rectangle([text_position, (text_position[0] + text_width, text_position[1] + text_height)], fill=player_colors[tuple(box)])
+            draw.text(text_position, text, fill="white", font=font)
 
     # Guardar el frame con las detecciones en el video de salida
     out.write(cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR))
