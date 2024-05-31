@@ -12,6 +12,8 @@ En un partido de voleibol, es importante poder rastrear y analizar las posicione
 
 ## Solución propuesta
 
+Despues de varios intentos y propuestas, nos hemos decantado por usar YOLO y redes neuronales en un entorno de Google Colab.
 
 ## Conclusiones
 
+Hemos aprendido que resolver un problema de este tipo puede llegar a resultar en un gran desafio y que existen diversas maneras de abordarlo.
