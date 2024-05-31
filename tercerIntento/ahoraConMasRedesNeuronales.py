@@ -44,7 +44,7 @@ while cap.isOpened():
     inputs = image_processor(images=image, return_tensors="pt")
     outputs = model(**inputs)
 
-    # Obtener las detecciones de personas
+    # Obtener las detecciones de personas y raquetas de tenis
     target_sizes = torch.tensor([image.size[::-1]])
     results = image_processor.post_process_object_detection(outputs, threshold=0.85, target_sizes=target_sizes)[0]
 
@@ -54,19 +54,30 @@ while cap.isOpened():
         if model.config.id2label[label.item()] == "person":
             box = [round(i, 2) for i in box.tolist()]
 
-            # Asignar un color al jugador si no está asignado
-            if tuple(box) not in player_colors:
-                # Obtener la posición x del centro de la caja delimitadora
-                center_x = (box[0] + box[2]) / 2
+            # Obtener la posición x del centro de la caja delimitadora
+            center_x = (box[0] + box[2]) / 2
 
-                # Asignar un color basado en la posición x
-                if center_x <= width / 2:
-                    player_colors[tuple(box)] = (255, 0, 0)  # Rojo
+            # Buscar la raqueta de tenis más cercana
+            tennis_racket_box = None
+            for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
+                if model.config.id2label[label.item()] == "tennis racket":
+                    tennis_racket_box = box
+                    break
+
+            # Si se encuentra una raqueta de tenis, colorear al jugador según su posición
+            if tennis_racket_box is not None:
+                # Obtener la posición x del centro de la raqueta de tenis
+                tennis_racket_center_x = (tennis_racket_box[0] + tennis_racket_box[2]) / 2
+
+                # Asignar color según la posición relativa a la raqueta
+                if center_x < tennis_racket_center_x:
+                    player_colors[tuple(box)] = (255, 0, 0)  # Rojo (izquierda)
                 else:
-                    player_colors[tuple(box)] = (0, 255, 0)  # Verde
+                    player_colors[tuple(box)] = (0, 255, 0)  # Verde (derecha)
 
             # Dibujar el rectángulo con el color asignado
-            draw.rectangle(tuple(box), outline=player_colors[tuple(box)], width=2)
+            color = player_colors.get(tuple(box), (0, 0, 0))  # Default color is black if key is not found
+            draw.rectangle(tuple(box), outline=color, width=2)
 
             # Obtener el valor de confianza
             confidence = round(score.item(), 2)
@@ -78,8 +89,7 @@ while cap.isOpened():
             text_width = text_bbox[2] - text_bbox[0]
             text_height = text_bbox[3] - text_bbox[1]
             text_position = (box[0], box[1] - text_height - 5)
-            draw.rectangle([text_position, (text_position[0] + text_width, text_position[1] + text_height)],
-                           fill=player_colors[tuple(box)])
+            #draw.rectangle([text_position, (text_position[0] + text_width, text_position[1] + text_height)], fill=player_colors[tuple(box)])
             draw.text(text_position, text, fill="white", font=font)
 
     # Guardar el frame con las detecciones en el video de salida

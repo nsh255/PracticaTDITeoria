@@ -25,7 +25,6 @@ while True:
     
     #crear un blob
     blob = cv2.dnn.blobFromImage(frame_resized, 0.007843, (300, 300), (127.5, 127.5, 127.5))
-    #print("blob.shape" , blob.shape)
 
     net.setInput(blob)
     detections = net.forward()
@@ -35,7 +34,6 @@ while True:
 
         if detection[2] > 0.30:
             label = classes[detection[1]]
-            #print(label)
             box = detection[3:7] * [width, height, width, height]
             x_start, y_start, x_end, y_end = int(box[0]), int(box[1]), int(box[2]), int(box[3])
             cv2.rectangle(frame, (x_start, y_start), (x_end, y_end), (0, 255, 0), 2)
